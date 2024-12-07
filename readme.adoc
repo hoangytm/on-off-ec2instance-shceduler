@@ -1,0 +1,93 @@
+# EC2 Start/Stop Lambda Function
+
+This repository contains a Java-based AWS Lambda function designed to start and stop EC2 instances based on specific tags. This solution can automate the management of EC2 instances, for example, shutting down instances at night and starting them in the morning.
+
+## Overview
+
+- **Start EC2 instances** that are tagged with `AutoSchedule=true` at a scheduled time (e.g., 7 AM).
+- **Stop EC2 instances** that are tagged with `AutoSchedule=true` at a scheduled time (e.g., 10 PM).
+- Can be triggered using AWS **CloudWatch Events** to run on a schedule.
+
+## Prerequisites
+
+Before deploying this Lambda function, ensure that you have the following:
+
+1. **AWS Account** with EC2 instances deployed.
+2. **IAM Role** with the required permissions for EC2 (specifically `ec2:StartInstances`, `ec2:StopInstances`, and `ec2:DescribeInstances`).
+3. **AWS SDK for Java** dependencies (see `pom.xml`).
+4. **Java 8+** for compiling and running the code.
+
+## IAM Role Permissions
+
+Ensure that the IAM Role assigned to your Lambda function has the following permissions:
+
+- **`ec2:StartInstances`**: To start EC2 instances.
+- **`ec2:StopInstances`**: To stop EC2 instances.
+- **`ec2:DescribeInstances`**: To describe EC2 instances and check their tags.
+
+### Example IAM Policy
+
+Here's an example IAM policy to allow starting and stopping EC2 instances:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:StartInstances",
+                "ec2:StopInstances",
+                "ec2:DescribeInstances"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+Lambda Function Setup
+
+1. Create the IAM Role for Lambda
+Go to IAM in the AWS Management Console.
+Create a new IAM Role with the following policies:
+AmazonEC2FullAccess (or a custom policy with the necessary EC2 permissions).
+Attach the role to the Lambda function you will create later.
+
+2. Create Lambda Function
+In the AWS Management Console, go to Lambda and click Create function.
+Select Author from scratch and choose Java as the runtime.
+Choose the IAM role you created earlier.
+Upload your compiled Java code (JAR file) or use Maven to package the code.
+Set the function timeout and memory according to your needs (e.g., 1 minute timeout).
+
+3. Lambda Function Code
+The main class of the Lambda function (EC2ControlLambda) performs the following:
+Retrieves EC2 instances that have the AutoSchedule=true tag.
+Starts or stops instances based on the event trigger.
+
+
+Schedule the Lambda Function
+
+You can use CloudWatch Events to schedule your Lambda function to automatically run at specific times:
+Go to CloudWatch and click Rules.
+Create a new rule with the following schedule expressions:
+To start EC2 instances at 7 AM every day: 0 7 * * ? *
+To stop EC2 instances at 10 PM every day: 0 22 * * ? *
+Set the target to your Lambda function.
+Enable the rule.
+
+Lambda Deployment
+
+Deploy the Lambda function in the AWS Console.
+Set up your CloudWatch Events triggers based on your requirements.
+Ensure that EC2 instances are tagged with AutoSchedule=true for them to be managed by the Lambda function.
+
+Testing
+
+You can test the Lambda function manually in the AWS Lambda console. Provide sample events or simulate the scheduled triggers by invoking the Lambda function with an empty event.
+
+Troubleshooting
+
+Permissions Issues: If you encounter permission errors, make sure the IAM role associated with the Lambda function has the correct EC2 permissions (ec2:StartInstances, ec2:StopInstances, ec2:DescribeInstances).
+Timeout Errors: If Lambda runs too long, increase the function's timeout settings.
+Tagging Issues: Ensure EC2 instances are correctly tagged with AutoSchedule=true for the Lambda function to manage them.
